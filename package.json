@@ -60,7 +60,7 @@
   ],
   "dependencies": {
     "dom-align": "1.x",
-    "rc-css-transition-group": "1.x",
+    "rc-css-transition-group": "https://github.com/MarcusBergholm/css-transition-group.git",
     "rc-util": "2.x"
   }
 }

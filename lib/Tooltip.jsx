@@ -30,6 +30,12 @@ class Tooltip extends React.Component {
     }
   }
 
+  componentWillUnmount() {
+    if(this.tipContainer) {
+        document.body.removeChild(this.tipContainer);
+    }
+  }
+
   getTipContainer() {
     if (!this.tipContainer) {
       this.tipContainer = document.createElement('div');

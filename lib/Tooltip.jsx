@@ -9,21 +9,23 @@ var domAlign = require('dom-align');
 var Popup = require('./Popup');
 
 class Tooltip extends React.Component {
+
   constructor(props) {
     super(props);
-    this.state = {
+    var state = {
       visible: !!props.defaultVisible
     };
     if ('visible' in props) {
-      this.state.visible = !!props.visible;
+      state.visible = !!props.visible;
     }
-    ['toggle', 'show', 'hide'].forEach((m)=> {
-      this[m] = this[m].bind(this);
-    });
+    this.state = state;
   }
 
   componentWillReceiveProps(nextProps) {
     if ('visible' in nextProps) {
+      if(nextProps.visible) {
+          this.getTipContainer();
+      }
       this.setState({
         visible: !!nextProps.visible
       });
@@ -32,6 +34,7 @@ class Tooltip extends React.Component {
 
   componentWillUnmount() {
     if(this.tipContainer) {
+        React.unmountComponentAtNode(this.tipContainer);
         document.body.removeChild(this.tipContainer);
     }
   }
@@ -45,41 +48,12 @@ class Tooltip extends React.Component {
   }
 
   renderToolTip(callback) {
-    var props = this.props;
-    var state = this.state;
-    React.render(<Popup prefixCls={props.prefixCls}
-        visible={state.visible}
-        placement={props.placement}
-        transitionName={props.transitionName}>
-      {props.overlay}
-      </Popup>,
-      this.getTipContainer(), function () {
-        callback(this);
-      });
-  }
-
-  toggle() {
-    if (this.state.visible) {
-      this.hide();
-    } else {
-      this.show();
-    }
-  }
-
-  setVisible(visible) {
-    this.setState({
-      visible: visible
-    }, () => {
-      this.props.onVisibleChange(this.state.visible);
-    });
-  }
-
-  show() {
-    this.setVisible(true);
-  }
-
-  hide() {
-    this.setVisible(false);
+    React.render(
+        this.getPopupElement(),
+        this.getTipContainer(),
+        function () {
+            callback(this);
+        });
   }
 
   componentDidMount() {
@@ -87,57 +61,66 @@ class Tooltip extends React.Component {
   }
 
   componentDidUpdate() {
-    var state = this.state;
-    this.renderToolTip((tooltip)=> {
-      if (state.visible) {
-        var rootNode = React.findDOMNode(this);
-        var tipNode = tooltip.getRootNode();
-        var placement = this.props.placement;
-        if (placement && placement.points) {
-          domAlign(tipNode, rootNode, placement);
-        } else {
-          var points = ['cr', 'cl'];
-          if (placement === 'right') {
-            points = ['cl', 'cr'];
-          } else if (placement === 'top') {
-            points = ['bc', 'tc'];
-          } else if (placement === 'bottom') {
-            points = ['tc', 'bc'];
-          }
-          domAlign(tipNode, rootNode, {
-            points: points
-          });
-        }
+      if (!this.popupRendered) {
+          return;
       }
-    });
+      var state = this.state;
+      this.renderToolTip((tooltip)=> {
+          if (state.visible) {
+              var rootNode = React.findDOMNode(this);
+              var tipNode = tooltip.getRootNode();
+              var placement = this.props.placement;
+              if (placement && placement.points) {
+                  domAlign(tipNode, rootNode, placement);
+              } else {
+                  var points = ['cr', 'cl'];
+                  if (placement === 'right') {
+                      points = ['cl', 'cr'];
+                  } else if (placement === 'top') {
+                      points = ['bc', 'tc'];
+                  } else if (placement === 'bottom') {
+                      points = ['tc', 'bc'];
+                  }
+                  domAlign(tipNode, rootNode, {
+                      points: points
+                  });
+              }
+          }
+      });
+  }
+
+  getPopupElement() {
+    if (!this.popupRendered) {
+      return null;
+    }
+    const props = this.props;
+    const state = this.state;
+    return (<Popup prefixCls={props.prefixCls}
+        visible={state.visible}
+        placement={props.placement}
+        animation={props.animation}
+        wrap={this}
+        style={props.overlayStyle}
+        transitionName={props.transitionName}>
+      {props.overlay}
+    </Popup>);
   }
 
   render() {
+    if(this.state.visible) {
+      this.popupRendered = true;
+    }
     var props = this.props;
     var children = props.children;
     var child = React.Children.only(children);
     var childProps = child.props || {};
     var newChildProps = {};
-    var trigger = props.trigger;
-    if (trigger.indexOf('click') !== -1) {
-      newChildProps.onClick = createChainedFunction(this.toggle, childProps.onClick);
-    }
-    if (trigger.indexOf('hover') !== -1) {
-      newChildProps.onMouseEnter = createChainedFunction(this.show, childProps.onMouseEnter);
-      newChildProps.onMouseLeave = createChainedFunction(this.hide, childProps.onMouseLeave);
-    }
-    if (trigger.indexOf('focus') !== -1) {
-      newChildProps.onFocus = createChainedFunction(this.show, childProps.onFocus);
-      newChildProps.onBlur = createChainedFunction(this.hide, childProps.onBlur);
-    }
     return React.cloneElement(child, newChildProps);
   }
 }
 
 Tooltip.propTypes = {
-  trigger: React.PropTypes.arrayOf(React.PropTypes.oneOf(['click', 'hover', 'focus'])),
   placement: React.PropTypes.oneOf(['top', 'right', 'bottom', 'left']),
-  onVisibleChange: React.PropTypes.func,
   overlay: React.PropTypes.node.isRequired
 };
 
@@ -145,8 +128,7 @@ Tooltip.defaultProps = {
   prefixCls: 'rc-tooltip',
   onVisibleChange: function () {
   },
-  placement: 'right',
-  trigger: ['hover']
+  placement: 'right'
 };
 
 module.exports = Tooltip;

@@ -60,7 +60,6 @@
   ],
   "dependencies": {
     "dom-align": "https://github.com/MarcusBergholm/dom-align/archive/master.tar.gz",
-    "rc-css-transition-group": "https://github.com/MarcusBergholm/css-transition-group/archive/master.tar.gz",
     "rc-util": "2.x"
   }
 }

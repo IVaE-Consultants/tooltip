@@ -3,8 +3,8 @@
  * @author yiminghe@gmail.com
  */
 
-var React = require('react');
-var CSSTransitionGroup = require('rc-css-transition-group');
+var React = require('react/addons');
+var CSSTransitionGroup = React.addons.CSSTransitionGroup;
 
 class Popup extends React.Component {
   getPlacementCss() {
@@ -26,17 +26,19 @@ class Popup extends React.Component {
     }
     var arrowClassName = `${props.prefixCls}-arrow`;
     var innerClassname = `${props.prefixCls}-inner`;
-    var content = props.visible ? [<div className={className}
-      key="popup"
-      ref="popup"
-      style={this.style}>
-      <div className={arrowClassName}></div>
-      <div className={innerClassname}>
-    {props.children}
-      </div>
-    </div>] : [];
+    var content = props.visible ? [
+        <div className={className}
+        key="popup"
+        ref="popup"
+        style={this.style}>
+        <div className={arrowClassName}></div>
+        <div className={innerClassname}>
+        {props.children}
+        </div>
+        </div>
+    ] : [];
     if (props.transitionName) {
-      return <CSSTransitionGroup transitionName={props.transitionName}>{content}</CSSTransitionGroup>;
+      return <CSSTransitionGroup transitionAppear={true} transitionName={props.transitionName}>{content}</CSSTransitionGroup>;
     } else {
       return content[0] || null;
     }
